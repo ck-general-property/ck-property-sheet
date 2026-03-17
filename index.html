@@ -974,17 +974,22 @@ select#empSelect:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(61,1
 // ════════════════════════════════════════
 // 🔧 ตั้งค่า URL ของ Google Apps Script
 // ════════════════════════════════════════
-const GAS_URL = 'https://script.google.com/macros/s/AKfycbyMUaw4vDVBIIaxlYZssvfUveWtvL-CGd_MzU4LqZeTDNNivYJOuV-rXqKOvFtrSI9t/exec';
+const GAS_URL = 'https://script.google.com/macros/s/AKfycby4O6z7OFJGVQ1Uh0dGsm8OMLzAuv_dXZYEvUKwF890TktiAeizMekLB0_Rxg3NOePn/exec';
 // ════════════════════════════════════════
 
-// ── fetch helper ──
+// ── GET helper (รองรับ CORS จาก GitHub Pages) ──
 async function gasPost(payload) {
-  const res = await fetch(GAS_URL, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(payload),
-    redirect: 'follow',
+  const params = new URLSearchParams();
+  params.set('action', payload.action);
+  // แนบ payload เป็น query string
+  Object.keys(payload).forEach(k => {
+    if (k !== 'action') {
+      const v = payload[k];
+      params.set(k, typeof v === 'object' ? JSON.stringify(v) : String(v));
+    }
   });
+  const url = GAS_URL + '?' + params.toString();
+  const res = await fetch(url, { method: 'GET', redirect: 'follow' });
   if (!res.ok) throw new Error('HTTP ' + res.status);
   const text = await res.text();
   try { return JSON.parse(text); } catch(e) { return text; }
